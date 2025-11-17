@@ -162,7 +162,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "simple_math_compiler"
+name = "simple_math"
 version = "0.1.0"
 dependencies = [
  "rustyline",
