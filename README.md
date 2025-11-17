@@ -16,15 +16,16 @@ It already supports:
   - Variables: `new_var = var * 5`
 
 ## Usage:
+```
 simple_math [OPTIONS]
 
 Options:
   -i             Enter interactive mode
   -f <filename>  Evaluate a file and print the result
 
+```
 Here is a simple example of a .math file
-
-```math
+```
 pi = 3
 radius = 420
 
