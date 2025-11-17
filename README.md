@@ -15,6 +15,13 @@ It already supports:
   - Parenthesis: `(a + b * 2)`.
   - Variables: `new_var = var * 5`
 
+## Build:
+```
+cargo build --release
+ln -s target/release/simple_math ./simple_math
+./simple_math -i
+```
+
 ## Usage:
 ```
 simple_math [OPTIONS]
@@ -38,4 +45,5 @@ The interpreter seaches for a "result" variable, if it doesn't exists, it prints
 ## WIP:
 Things I am still working in is:
   - Floating points
+  - Out of variable expression in REPL mode
   - Compilation to machine code
