@@ -23,6 +23,11 @@ impl REPL {
     pub fn step(&mut self) -> bool {
         match self.rl.readline("> ") {
             Ok(line) => {
+                if line == "exit" {
+                    println!("Bye bye!");
+                    return true;
+                }
+
                 let tk = self.tokenize(line.as_str());
                 let mut parser = Parser::new(tk);
                 if line.contains("=") {
@@ -31,10 +36,17 @@ impl REPL {
                     println!("< {n} = {v}");
                     self.vars.insert(n, v);
                 } else {
-                    let v = self.vars.get(&line);
-                    match v {
-                        Some(a) => println!("= {a}"),
-                        None => eprintln!("This variable does not exist"),
+                    if line.chars().all(|c| c.is_alphabetic() || c == '_') {
+                        let v = self.vars.get(&line);
+                        match v {
+                            Some(a) => println!("= {a}"),
+                            None => eprintln!("This variable does not exist"),
+                        }
+                    } else {
+                        let expr = parser.parse_expr_pratt(0.);
+                        let res = eval_expr(expr, &self.vars);
+
+                        println!("= {res}");
                     }
                 }
 
