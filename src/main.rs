@@ -6,6 +6,7 @@ use crate::{
 };
 use std::{env, fs};
 mod ast;
+mod compile;
 mod eval;
 mod lexer;
 mod repl;
