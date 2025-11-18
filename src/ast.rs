@@ -19,7 +19,7 @@ impl Display for Program {
 #[derive(Debug, Clone)]
 pub enum Expression {
     Var(String),
-    Num(isize),
+    Num(f64),
     Parenthed(Box<Expression>),
     Operation(String, Vec<Expression>),
 }

@@ -1,10 +1,14 @@
 use rustyline::{DefaultEditor, error::ReadlineError};
 use std::collections::HashMap;
 
-use crate::{lexer::{Lexer, Token}, ast::Parser, eval::*};
+use crate::{
+    ast::Parser,
+    eval::*,
+    lexer::{Lexer, Token},
+};
 
 pub struct REPL {
-    vars: HashMap<String, isize>,
+    vars: HashMap<String, f64>,
     rl: DefaultEditor,
 }
 
@@ -12,10 +16,10 @@ impl REPL {
     pub fn new() -> Self {
         Self {
             vars: HashMap::new(),
-            rl: DefaultEditor::new().unwrap()
+            rl: DefaultEditor::new().unwrap(),
         }
     }
-    
+
     pub fn step(&mut self) -> bool {
         match self.rl.readline("> ") {
             Ok(line) => {

@@ -17,14 +17,14 @@ impl Lexer {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Token {
     pub line: usize,
     pub token_type: TokenType,
 }
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
-    Number(isize),
+    Number(f64),
     LParen,
     RParen,
     Op(String),
@@ -93,22 +93,46 @@ impl Iterator for Lexer {
                     token_type: TokenType::EndExpr,
                 })
             }
-            d if d.is_ascii_digit() => {
-                let mut buf = (d as char).to_digit(10).unwrap() as isize;
+
+            d if d.is_ascii_digit() || d == '.' => {
+                let mut seen_dot = d == '.';
+                let mut buf = String::new();
+                buf.push(d);
+
+                // Avança após consumir o primeiro caractere
+                //advance(self, d.len_utf8());
+
                 while self.pos < self.text.len() {
                     let next_slice = &self.text[self.pos..];
                     let next_ch = next_slice.chars().next().unwrap();
-                    if let Some(digit) = next_ch.to_digit(10) {
-                        buf = buf * 10 + digit as isize;
+
+                    if next_ch.is_ascii_digit() {
+                        buf.push(next_ch);
                         advance(self, next_ch.len_utf8());
+                    } else if next_ch == '.' {
+                        if seen_dot {
+                            eprintln!(
+                                "Mais de um ponto detectado no número \"{}\"; ignorando ponto extra",
+                                buf
+                            );
+                            advance(self, next_ch.len_utf8());
+                        } else {
+                            seen_dot = true;
+                            buf.push('.');
+                            advance(self, next_ch.len_utf8());
+                        }
                     } else {
                         break;
                     }
                 }
+                let number = buf.parse::<f64>().unwrap_or_else(|e| {
+                    eprintln!("Erro ao converter \"{buf}\" para float: {e}");
+                    0.0
+                });
 
                 return Some(Token {
                     line: self.current_line,
-                    token_type: TokenType::Number(buf),
+                    token_type: TokenType::Number(number),
                 });
             }
             c if c.is_alphabetic() || c == '_' => {

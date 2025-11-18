@@ -14,6 +14,7 @@ It already supports:
   - Basic operations: `+`, `-`, `*`, `/`.
   - Parenthesis: `(a + b * 2)`.
   - Variables: `new_var = var * 5`
+  - Floating points `pi = 3.14156`
 
 ## Build:
 ```
@@ -44,6 +45,5 @@ The interpreter seaches for a "result" variable, if it doesn't exists, it prints
 
 ## WIP:
 Things I am still working in is:
-  - Floating points
   - Out of variable expression in REPL mode
   - Compilation to machine code

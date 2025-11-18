@@ -33,8 +33,10 @@ fn main() {
                 fs::read_to_string(path).expect(format!("Error reading file {path}").as_str());
 
             let tk = tokenize(content.as_str());
+            // dbg!(&tk);
             let mut parser = Parser::new(tk);
             let program = parser.parse_program();
+            // dbg!(&program);
             let result = eval_program(program);
 
             println!("result = {result}");
