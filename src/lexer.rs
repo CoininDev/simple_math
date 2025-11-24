@@ -1,3 +1,6 @@
+use std::fmt;
+use crate::error::LexerError;
+
 pub struct Lexer {
     text: String,
     pos: usize,
@@ -22,6 +25,7 @@ pub struct Token {
     pub line: usize,
     pub token_type: TokenType,
 }
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenType {
     Number(f64),
@@ -32,6 +36,8 @@ pub enum TokenType {
     Ident(String),
     EndExpr,
 }
+
+pub type Result<T> = std::result::Result<T, LexerError>;
 
 pub fn binding_power(op: &str) -> (f32, f32) {
     match op {
@@ -54,7 +60,7 @@ pub fn unary_binding_power(op: &str) -> (f32, f32) {
 }
 
 impl Iterator for Lexer {
-    type Item = Token;
+    type Item = Result<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.pos >= self.text.len() {
@@ -70,37 +76,34 @@ impl Iterator for Lexer {
 
         advance(self, ch_len);
         match ch {
-            '=' => Some(Token {
+            '=' => Some(Ok(Token {
                 line: self.current_line,
                 token_type: TokenType::Assign,
-            }),
-            '+' | '-' | '*' | '/' => Some(Token {
+            })),
+            '+' | '-' | '*' | '/' => Some(Ok(Token {
                 line: self.current_line,
                 token_type: TokenType::Op(ch.to_string()),
-            }),
-            '(' => Some(Token {
+            })),
+            '(' => Some(Ok(Token {
                 line: self.current_line,
                 token_type: TokenType::LParen,
-            }),
-            ')' => Some(Token {
+            })),
+            ')' => Some(Ok(Token {
                 line: self.current_line,
                 token_type: TokenType::RParen,
-            }),
+            })),
             '\n' => {
                 self.current_line += 1;
-                Some(Token {
+                Some(Ok(Token {
                     line: self.current_line,
                     token_type: TokenType::EndExpr,
-                })
+                }))
             }
 
             d if d.is_ascii_digit() || d == '.' => {
                 let mut seen_dot = d == '.';
                 let mut buf = String::new();
                 buf.push(d);
-
-                // Avança após consumir o primeiro caractere
-                //advance(self, d.len_utf8());
 
                 while self.pos < self.text.len() {
                     let next_slice = &self.text[self.pos..];
@@ -111,11 +114,10 @@ impl Iterator for Lexer {
                         advance(self, next_ch.len_utf8());
                     } else if next_ch == '.' {
                         if seen_dot {
-                            eprintln!(
-                                "Mais de um ponto detectado no número \"{}\"; ignorando ponto extra",
+                            return Some(Err(LexerError::InvalidNumber(format!(
+                                "Número '{}' contém múltiplos pontos decimais",
                                 buf
-                            );
-                            advance(self, next_ch.len_utf8());
+                            ))));
                         } else {
                             seen_dot = true;
                             buf.push('.');
@@ -125,15 +127,17 @@ impl Iterator for Lexer {
                         break;
                     }
                 }
-                let number = buf.parse::<f64>().unwrap_or_else(|e| {
-                    eprintln!("Erro ao converter \"{buf}\" para float: {e}");
-                    0.0
-                });
 
-                return Some(Token {
-                    line: self.current_line,
-                    token_type: TokenType::Number(number),
-                });
+                match buf.parse::<f64>() {
+                    Ok(number) => Some(Ok(Token {
+                        line: self.current_line,
+                        token_type: TokenType::Number(number),
+                    })),
+                    Err(e) => Some(Err(LexerError::ParseError(
+                        buf,
+                        format!("Falha ao analisar número: {}", e),
+                    ))),
+                }
             }
             c if c.is_alphabetic() || c == '_' => {
                 let mut buf = String::from(c);
@@ -147,18 +151,12 @@ impl Iterator for Lexer {
                         break;
                     }
                 }
-                Some(Token {
+                Some(Ok(Token {
                     line: self.current_line,
                     token_type: TokenType::Ident(buf),
-                })
+                }))
             }
-            _ => {
-                eprintln!(
-                    "unhandled character at: {}, position: {}",
-                    self.current_line, self.pos,
-                );
-                self.next()
-            }
+            _ => Some(Err(LexerError::UnrecognizedChar(ch))),
         }
     }
 }

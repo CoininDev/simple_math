@@ -3,11 +3,12 @@ use crate::repl::REPL;
 use crate::{
     ast::Parser,
     lexer::{Lexer, Token},
+    error::*,
 };
 use std::{env, fs};
 mod ast;
-mod compile;
 mod eval;
+mod error;
 mod lexer;
 mod repl;
 
@@ -34,11 +35,16 @@ fn main() {
                 fs::read_to_string(path).expect(format!("Error reading file {path}").as_str());
 
             let tk = tokenize(content.as_str());
-            // dbg!(&tk);
             let mut parser = Parser::new(tk);
-            let program = parser.parse_program();
-            // dbg!(&program);
-            let result = eval_program(program);
+            let program = match parser.parse_program() {
+                Ok(p) => p,
+                Err(e) => panic!("Parser error: {e}"),
+            };
+
+            let result = match eval_program(program) {
+                Ok(r) => r,
+                Err(e) => panic!("Evaluation Error: {e}"),
+            };
 
             println!("result = {result}");
         }
@@ -57,11 +63,15 @@ Options:
     println!("{message}");
 }
 
+// used by file interpreting
 fn tokenize(s: &str) -> Vec<Token> {
     let lex = Lexer::new(s);
     let mut vlex = vec![];
     for t in lex {
-        vlex.push(t);
+        match t {
+            Err(e) => eprintln!("Tokenizer error: {e}"),
+            Ok(token) => vlex.push(token),
+        }
     }
     vlex
 }

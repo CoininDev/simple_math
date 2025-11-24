@@ -5,6 +5,7 @@ use crate::{
     ast::Parser,
     eval::*,
     lexer::{Lexer, Token},
+    error::*,
 };
 
 pub struct REPL {
@@ -29,10 +30,31 @@ impl REPL {
                 }
 
                 let tk = self.tokenize(line.as_str());
+                let tk = match tk {
+                    Ok(t) => t,
+                    Err(e) => {
+                        eprintln!("Error: {e}");
+                        return false;
+                    }
+                };
+
                 let mut parser = Parser::new(tk);
                 if line.contains("=") {
-                    let assign = parser.parse_assign();
-                    let (n, v) = eval_assign(assign, &self.vars);
+                    let assign = match parser.parse_assign() {
+                        Ok(p) => p,
+                        Err(e) => {
+                            eprintln!("Error: {e}");
+                            return false;
+                        }
+                    };
+
+                    let (n, v) = match eval_assign(assign, &self.vars) {
+                        Ok(tuple) => tuple,
+                        Err(e) => {
+                            eprintln!("Error: {e}");
+                            return false;
+                        }
+                    };
                     println!("< {n} = {v}");
                     self.vars.insert(n, v);
                 } else {
@@ -43,8 +65,20 @@ impl REPL {
                             None => eprintln!("This variable does not exist"),
                         }
                     } else {
-                        let expr = parser.parse_expr_pratt(0.);
-                        let res = eval_expr(expr, &self.vars);
+                        let expr = match parser.parse_expr_pratt(0.){
+                            Ok(p) => p,
+                            Err(e) => {
+                                eprintln!("Error: {e}");
+                                return false;
+                            }
+                        };
+                        let res = match eval_expr(expr, &self.vars){
+                            Ok(r) => r,
+                            Err(e) => {
+                                eprintln!("Error: {e}");
+                                return false;
+                            }
+                        };
 
                         println!("= {res}");
                     }
@@ -64,12 +98,13 @@ impl REPL {
         }
     }
 
-    pub fn tokenize(&self, s: &str) -> Vec<Token> {
+    pub fn tokenize(&self, s: &str) -> Result<Vec<Token>, LexerError> {
         let lex = Lexer::new(s);
         let mut vlex = vec![];
         for t in lex {
+            let t = t?;
             vlex.push(t);
         }
-        vlex
+        Ok(vlex)
     }
 }
