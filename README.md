@@ -45,5 +45,4 @@ The interpreter seaches for a "result" variable, if it doesn't exists, it prints
 
 ## WIP:
 Things I am still working in is:
-  - Out of variable expression in REPL mode
   - Compilation to machine code
