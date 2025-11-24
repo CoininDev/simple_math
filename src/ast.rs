@@ -1,12 +1,5 @@
-use crate::lexer::{
-    Token, 
-    TokenType, 
-    binding_power, 
-    is_valid_unary, 
-    unary_binding_power
-};
-
-use crate::error::ParsingError;
+use crate::{lexer::*, error::ParsingError};
+use std::fmt::Display;
 
 #[derive(Debug, Clone)]
 pub struct Program {
@@ -19,6 +12,23 @@ pub enum Expression {
     Num(f64),
     Parenthed(Box<Expression>),
     Operation(String, Vec<Expression>),
+}
+
+impl Display for Expression {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Expression::Var(s) => write!(f, "var '{s}'"),
+            Expression::Num(i) => write!(f, "{i}"),
+            Expression::Parenthed(a) => write!(f, "({a})"),
+            Expression::Operation(op, e) => {
+                write!(f, "({op}")?;
+                for expr in e {
+                    write!(f, " {expr}")?;
+                }
+                write!(f, ")")
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -81,9 +91,7 @@ impl Parser {
             match self.parse_assign() {
                 Ok(assign) => {
                     buf.push(assign);
-                    // Tenta esperar por EndExpr, mas continua mesmo se não encontrar
                     if let Err(e) = self.expect(TokenType::EndExpr) {
-                        // Se não há mais tokens, é OK, caso contrário reporta o erro
                         if self.peek(0).is_some() {
                             return Err(e);
                         }
@@ -171,10 +179,9 @@ impl Parser {
             let op = match self.peek_type(0) {
                 None | Some(TokenType::EndExpr) | Some(TokenType::RParen) => break,
                 Some(TokenType::Op(op)) => op.clone(),
-                t => {
+                Some(t) => {
                     return Err(ParsingError::InvalidExpression(format!(
-                        "Operador esperado, encontrado: {:?}",
-                        t
+                        "expecting an operator, but found: {t}"
                     )))
                 }
             };

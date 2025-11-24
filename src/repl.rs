@@ -33,7 +33,8 @@ impl REPL {
                 let tk = match tk {
                     Ok(t) => t,
                     Err(e) => {
-                        eprintln!("Error: {e}");
+                        eprintln!("Lexer Error: {e}");
+                        self.rl.add_history_entry(&line).unwrap();
                         return false;
                     }
                 };
@@ -43,7 +44,8 @@ impl REPL {
                     let assign = match parser.parse_assign() {
                         Ok(p) => p,
                         Err(e) => {
-                            eprintln!("Error: {e}");
+                            eprintln!("Parsing Error: {e}");
+                            self.rl.add_history_entry(&line).unwrap();
                             return false;
                         }
                     };
@@ -51,7 +53,8 @@ impl REPL {
                     let (n, v) = match eval_assign(assign, &self.vars) {
                         Ok(tuple) => tuple,
                         Err(e) => {
-                            eprintln!("Error: {e}");
+                            eprintln!("Eval Error: {e}");
+                            self.rl.add_history_entry(&line).unwrap();
                             return false;
                         }
                     };
@@ -68,14 +71,16 @@ impl REPL {
                         let expr = match parser.parse_expr_pratt(0.){
                             Ok(p) => p,
                             Err(e) => {
-                                eprintln!("Error: {e}");
+                                eprintln!("Parsing Error: {e}");
+                                self.rl.add_history_entry(&line).unwrap();
                                 return false;
                             }
                         };
                         let res = match eval_expr(expr, &self.vars){
                             Ok(r) => r,
                             Err(e) => {
-                                eprintln!("Error: {e}");
+                                eprintln!("Eval Error: {e}");
+                                self.rl.add_history_entry(&line).unwrap();
                                 return false;
                             }
                         };

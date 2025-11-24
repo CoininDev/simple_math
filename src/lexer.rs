@@ -37,7 +37,19 @@ pub enum TokenType {
     EndExpr,
 }
 
-pub type Result<T> = std::result::Result<T, LexerError>;
+impl fmt::Display for TokenType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Number(n) => write!(f,"{n}"),
+            Self::LParen => write!(f,"("),
+            Self::RParen => write!(f,")"),
+            Self::Op(s) => write!(f,"{s}"),
+            Self::Assign => write!(f,"="),
+            Self::Ident(s) => write!(f,"{s}"),
+            Self::EndExpr => write!(f,"$")
+        }
+    }
+}
 
 pub fn binding_power(op: &str) -> (f32, f32) {
     match op {
@@ -59,8 +71,9 @@ pub fn unary_binding_power(op: &str) -> (f32, f32) {
     }
 }
 
+pub type LexResult<T> = Result<T, LexerError>;
 impl Iterator for Lexer {
-    type Item = Result<Token>;
+    type Item = LexResult<Token>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.pos >= self.text.len() {
