@@ -18,6 +18,8 @@ It already supports:
 
 ## Build:
 ```
+git clone --depth=1 https://github.com/CoininDev/simple_math
+cd simple_math
 cargo build --release
 ln -s target/release/simple_math ./simple_math
 ./simple_math -i
