@@ -1,5 +1,5 @@
 # Simple Math
-## What is:
+## What it is:
 Simple Math is a project made for learning purposes.
 It is a simple math interpreter which lets you write variables and use them.
 This was made using the Rust Programming Language.
